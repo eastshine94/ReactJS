@@ -1,52 +1,69 @@
 import React, {Component} from 'react';
 import './App.css';
 import Movie from './Movie';
-
-
-const movies = [
-  {
-    title : 'Matrix',
-    poster : 'https://is5-ssl.mzstatic.com/image/thumb/Music118/v4/3e/b7/bf/3eb7bfb1-dc0b-2fec-5fbe-9efb8c7c8395/MatrixTrilogy4K_V_DD_KA_TT_2000x3000_300dpi_EN.jpg/268x0w.jpg'
-  },
-  {
-    title : 'Hunger Game',
-    poster : 'https://imgix.bustle.com/uploads/image/2017/8/9/5846855f-3fd5-4db9-84cb-5f65ed2bd107-hunger-games.jpg?w=970&h=546&fit=crop&crop=faces&auto=format&q=70'
-  },
-  {
-    title : 'Old Boy',
-    poster : 'https://upload.wikimedia.org/wikipedia/en/thumb/6/67/Oldboykoreanposter.jpg/220px-Oldboykoreanposter.jpg'
-  },
-  {
-    title : 'Star wars',
-    poster : 'https://t1.daumcdn.net/cfile/tistory/223BE445567253F028'
-  }
-]
+import { thisTypeAnnotation } from '@babel/types';
 
 
 class App extends Component {
   //컴포넌트 라이프 사이클
-  //순서 : componentWillMount => render => componentDidMount
-  //update : 
+  // Render: componentWillMount() -> render() -> componentDidMount()
+  // Update componentWillReceiveProps() -> shouldComponentUpdate() -> componentWillUpdate() -> render() -> componentDidUpdate()
 
   /* jshint ignore:start */
-  componentWillMount() {
-    console.log('will mount');
+  state = {};
+  componentWillMount(){
+    console.log('will Mount');
   }
+
   componentDidMount() {
-    console.log('did mount');
+    console.log('did Mount')
+    this._getMoives();
   }
-  
+
+  _renderMovies = ()=> {
+    const movies = this.state.movies.map((movie) => {
+      console.log(movie);
+      return <Movie 
+        title={movie.title_english} 
+        poster={movie.medium_cover_image} 
+        genres={movie.genres} 
+        rating={movie.rating} 
+        synopsis={movie.synopsis}  
+        key={movie.id} 
+        />
+    });
+    return movies;
+  }
+
+
+  _getMoives = async () =>{
+    //_callApi가 끝나기를 기다리고 return 값이 무엇이든지 간에 moives에 return한다.
+    // 그리고 setState를 실행
+    const movies = await this._callApi();
+    this.setState({
+      //movies : movies를 그냥 movies로 표현할 수 있음
+      movies
+    });
+  };
+
+  _callApi = () =>{
+    //fetch로 url에 있는 것을 잡아옴
+    //성공시 then 실패시 catch
+    return fetch("https://yts.lt/api/v2/list_movies.json?sort_by=download_count")
+    .then(res => res.json())
+    .then(json => json.data.movies)
+    .catch(err => err);
+  };
+
   render(){
+    const { movies } = this.state;
     return (
-      <div className="App">
-  
-       {movies.map((movie,index) => {
-         return <Movie title={movie.title} poster={movie.poster} key={index} />
-       })}
+      <div className={movies ? "App" : "App--loading"}>
+        {movies ? this._renderMovies() : "Loading"}
       </div>
     );
   }
-  
+
   /* jshint ignore:end */
 }
 
